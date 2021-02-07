@@ -1,0 +1,42 @@
+pipeline{
+    
+    agent any
+    
+    environment {
+    PATH= "/usr/share/maven;$PATH"
+    }
+    
+    stages{
+        
+        stage("Git Checkout"){
+            steps{
+               git 'https://github.com/kveni77/krishnaproject2.git'
+            }
+        }
+        stage("Maven Build"){
+            steps{
+               sh 'mvn clean install package'
+            }
+        }
+        
+        stage("deploy tomcat"){
+            steps{
+               
+                sshagent(['tomcat-new']) {
+                    
+                    sh """
+                        scp -o StrictHostKeyChecking=no webapp/target/*.war ubuntu@54.173.36.147:/opt/tomcat8/webapps
+                        ssh ubuntu@54.173.36.147 /opt/tomcat8/bin/shutdown.sh
+                        ssh ubuntu@54.173.36.147 /opt/tomcat8/bin/startup.sh
+                    
+                    """
+                }
+                
+            }
+        }
+        
+        
+        
+        }
+    
+    }
